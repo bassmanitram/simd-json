@@ -588,11 +588,14 @@ impl<'de, 'a> de::Deserializer<'de> for MapKey<'de, 'a> {
 }
 
 //
-// WHAT WE NEED TO OBTAIN A Value view of the DESERIALIZER
+// WHAT WE NEED TO OBTAIN A Value view of the DESERIALIZER from the standard
+// serde "workflow" - it's much easier to cast the deserializer, but that's 
+// just plain not possible without unsafe code and assumptions.
 //
 impl<'de> Deserializer<'de> {
-
-    // Basically we call self.as_value and return that ... not YET sure exactly how :)
+    // Basically we want to call self.as_value() and return that ... but by the looks
+    // of serde_json::RawValue, it takes a LOT of going around the houses to do it - 
+    // and RawValue is just doing it with a string, not a vector of Nodes...
     fn deserialize_value<V>(&mut self, _visitor: V) -> Result<V::Value>
     where
         V: de::Visitor<'de>,
