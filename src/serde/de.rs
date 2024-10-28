@@ -4,7 +4,7 @@ use serde_ext::de::{self, DeserializeSeed, MapAccess, SeqAccess, Visitor};
 use serde_ext::forward_to_deserialize_any;
 use std::str;
 
-pub const TAPE_TOKEN: &str = "$simd_json::private::Tape";
+pub const VALUE_TOKEN: &str = "$simd_json::private::Value";
 
 impl<'a, 'de> de::Deserializer<'de> for &'a mut Deserializer<'de>
 where
@@ -292,10 +292,10 @@ where
         V: Visitor<'de>,
     {
         //
-        // How to get the tape out of the deserializer - inspired by serde_json::de::Deserializer RawValue support
+        // How to get the deserializer as an introspectable Value - inspired by serde_json::de::Deserializer RawValue support
         //
-        if name == TAPE_TOKEN {
-            return self.deserialize_tape(visitor);
+        if name == VALUE_TOKEN {
+            return self.deserialize_value(visitor);
         }
 
         visitor.visit_newtype_struct(self)
@@ -587,19 +587,13 @@ impl<'de, 'a> de::Deserializer<'de> for MapKey<'de, 'a> {
     }
 }
 
-// WHAT WE NEED TO EXTRACT THE TAPE FROM THE DESERIALIZER
 //
-// This is HEAVILY inspired by how serde_json does RawValue, but is more straight forward
-// because 
-// * we don't aim to allow this multiple times - extracting the Tape "destroys" the
-//   deserializer (It actually swaps in a null Tape)
-// * The deserializer cannot be used further
-// * This more like an "into" operation - after this the returned tape becomes the way to
-//   continue deserialization
+// WHAT WE NEED TO OBTAIN A Value view of the DESERIALIZER
+//
 impl<'de> Deserializer<'de> {
 
-    // Not REALLY "deserializing" the tape - just removing and returning it!
-    fn deserialize_tape<V>(&mut self, _visitor: V) -> Result<V::Value>
+    // Basically we call self.as_value and return that ... not YET sure exactly how :)
+    fn deserialize_value<V>(&mut self, _visitor: V) -> Result<V::Value>
     where
         V: de::Visitor<'de>,
     {
